@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Capture for OBS</title>
+</head>
+<body>
+  <!-- This page exists solely for OBS to capture audio -->
+  <!-- It will play the same sounds but only for streaming -->
+
+  <audio id="sessionEndSound" src="sessionend.mp3" preload="auto"></audio>
+  <audio id="longBreakSound" src="longbreak.mp3" preload="auto"></audio>
+  <audio id="sessionStart" src="sessionstart.mp3" preload="auto"></audio>
+
+  <script>
+    // Listen for messages from parent window to play sounds
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin) return;
+
+      const audioId = event.data.audioId;
+      const audio = document.getElementById(audioId);
+      if (audio) {
+        audio.currentTime = 0; // Reset to beginning
+        audio.play().catch(e => console.log('Audio play failed:', e));
+      }
+    });
+
+    // Also listen for direct function calls (fallback)
+    window.playAudioForStream = function(audioId) {
+      const audio = document.getElementById(audioId);
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log('Audio play failed:', e));
+      }
+    };
+  </script>
+</body>
+</html>

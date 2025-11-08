@@ -36,9 +36,12 @@
   <div id="status">Session 1/4</div>
   <div id="timer">25:00</div>
 
-  <audio id="sessionEndSound" src="sessionend.mp3" volume="0.6"></audio>
-  <audio id="longBreakSound" src="longbreak.mp3"></audio>
-  <audio id="sessionStart" src="sessionstart.mp3"></audio>
+  <audio id="sessionEndSound" src="sessionend.mp3" preload="auto"></audio>
+  <audio id="longBreakSound" src="longbreak.mp3" preload="auto"></audio>
+  <audio id="sessionStart" src="sessionstart.mp3" preload="auto"></audio>
+
+  <!-- Hidden iframe for OBS audio capture -->
+  <iframe id="audioCapture" src="audio-capture.html" style="display: none;"></iframe>
 
 
   <script>
@@ -56,11 +59,28 @@
     const sessionEndSound = document.getElementById("sessionEndSound");
     const sessionStartSound = document.getElementById("sessionStart");
     const longBreakSound = document.getElementById("longBreakSound");
+    const audioCaptureFrame = document.getElementById("audioCapture");
     
     function updateTimer() {
       let m = Math.floor(remaining / 60);
       let s = remaining % 60;
       timer.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+    }
+
+    // Function to play audio both locally and for OBS capture
+    function playAudio(audioElement, audioId) {
+      // Play locally
+      audioElement.currentTime = 0;
+      audioElement.play().catch(e => console.log('Local audio failed:', e));
+
+      // Also trigger for OBS capture via iframe
+      try {
+        if (audioCaptureFrame.contentWindow) {
+          audioCaptureFrame.contentWindow.postMessage({ audioId: audioId }, window.location.origin);
+        }
+      } catch (e) {
+        console.log('OBS capture failed:', e);
+      }
     }
 
     function tick(){
@@ -73,7 +93,7 @@
           currentSession++;
           if(currentSession > sessionNum){
             // Completed all 4 sessions, take long break
-            longBreakSound.play();
+            playAudio(longBreakSound, "longBreakSound");
             label.textContent = "Long Break";
             remaining = longBreakTime;
             status.textContent = "Well done!";
@@ -81,7 +101,7 @@
             isLongBreak = true;
           } else {
             // Take regular break
-            sessionEndSound.play();
+            playAudio(sessionEndSound, "sessionEndSound");
             label.textContent = "Break";
             remaining = breakTime;
           }
@@ -89,14 +109,14 @@
           // Break just completed
           if(isLongBreak){
             // Long break completed, start new work session
-            sessionStartSound.play();
+            playAudio(sessionStartSound, "sessionStart");
             label.textContent = "Focus";
             remaining = workTime;
             status.textContent = `Session ${currentSession}/${sessionNum}`;
             isLongBreak = false;
           } else {
             // Regular break completed, start work session
-            sessionStartSound.play();
+            playAudio(sessionStartSound, "sessionStart");
             label.textContent = "Focus";
             remaining = workTime;
             status.textContent = `Session ${currentSession}/${sessionNum}`;
@@ -110,7 +130,7 @@
 
 
 
-    sessionStartSound.play();
+    playAudio(sessionStartSound, "sessionStart");
     updateTimer();
     setInterval(tick, 1000);
   </script>

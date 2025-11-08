@@ -11,7 +11,26 @@ A transparent overlay timer for OBS streaming with audio notifications.
 
 ## Setup Options
 
-### Option 1: Browser Source with Audio Capture (Recommended)
+### Option 1: Dual Audio - Local Playback + OBS Capture (Recommended)
+
+This solution plays audio locally on your computer while also capturing it for your stream.
+
+1. **Add Browser Source in OBS:**
+   - Right-click in Sources → Add → Browser Source
+   - Name it "Pomodoro Timer"
+   - Check "Local file" and select `pomodoro.html`
+   - Set width/height to your desired size (e.g., 800x400)
+   - Check "Shutdown source when not visible"
+   - **Important:** Check "Control audio via OBS" in the Audio section
+
+2. **Configure Audio:**
+   - In OBS Audio Mixer, you should now see "Pomodoro Timer" as an audio source
+   - Enable it and adjust volume as needed
+   - Set it to "Monitor and Output" so it goes to both your stream AND your local speakers
+
+**Result:** You'll hear the sounds locally AND they'll go through your stream!
+
+### Option 2: Browser Source with Audio Capture Only
 
 1. **Add Browser Source in OBS:**
    - Right-click in Sources → Add → Browser Source
@@ -26,7 +45,7 @@ A transparent overlay timer for OBS streaming with audio notifications.
    - Enable it and adjust volume as needed
    - Make sure it's set to "Monitor and Output" or "Monitor Only" depending on your setup
 
-### Option 2: Media Source Approach (Alternative)
+### Option 3: Media Source Approach (Alternative)
 
 1. **Create Media Sources in OBS:**
    - Add 3 Media Sources for your sounds:
