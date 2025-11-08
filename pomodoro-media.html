@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pomodoro Timer - Media Source Version</title>
+  <style>
+    body {
+      background: transparent;
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #label {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #status {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    #timer {
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="label">Focus</div>
+  <div id="status">Session 1/4</div>
+  <div id="timer">25:00</div>
+
+  <script src="pomodoro-timer.js"></script>
+</body>
+</html>
