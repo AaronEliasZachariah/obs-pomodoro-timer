@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pomodoro Timer - Simple Version</title>
+  <style>
+    body {
+      background: transparent;
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #label {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #status {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    #timer {
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="label">Focus</div>
+  <div id="status">Session 1/4</div>
+  <div id="timer">25:00</div>
+
+  <audio id="sessionEndSound" src="sessionend.mp3" preload="auto"></audio>
+  <audio id="longBreakSound" src="longbreak.mp3" preload="auto"></audio>
+  <audio id="sessionStart" src="sessionstart.mp3" preload="auto"></audio>
+
+  <script>
+    let workTime = 25*60;
+    let breakTime = 5*60;
+    let longBreakTime = 15*60;
+    let isWork = true;
+    let remaining = workTime;
+    let isLongBreak = false;
+    let sessionNum = 4;
+    let currentSession = 1;
+    const label = document.getElementById("label");
+    const status = document.getElementById("status");
+    const timer = document.getElementById("timer");
+    const sessionEndSound = document.getElementById("sessionEndSound");
+    const sessionStartSound = document.getElementById("sessionStart");
+    const longBreakSound = document.getElementById("longBreakSound");
+
+    function updateTimer() {
+      let m = Math.floor(remaining / 60);
+      let s = remaining % 60;
+      timer.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+    }
+
+    function playAudio(audioElement) {
+      audioElement.currentTime = 0;
+      audioElement.play().catch(e => console.log('Audio play failed:', e));
+    }
+
+    function tick(){
+      if (remaining > 0){
+        remaining--;
+        updateTimer();
+      } else {
+        if(isWork){
+          currentSession++;
+          if(currentSession > sessionNum){
+            // Completed all 4 sessions, take long break
+            playAudio(longBreakSound);
+            label.textContent = "Long Break";
+            remaining = longBreakTime;
+            status.textContent = "Well done!";
+            currentSession = 1; // Reset for next cycle
+            isLongBreak = true;
+          } else {
+            // Take regular break
+            playAudio(sessionEndSound);
+            label.textContent = "Break";
+            remaining = breakTime;
+          }
+        } else {
+          // Break just completed
+          if(isLongBreak){
+            // Long break completed, start new work session
+            playAudio(sessionStartSound);
+            label.textContent = "Focus";
+            remaining = workTime;
+            status.textContent = `Session ${currentSession}/${sessionNum}`;
+            isLongBreak = false;
+          } else {
+            // Regular break completed, start work session
+            playAudio(sessionStartSound);
+            label.textContent = "Focus";
+            remaining = workTime;
+            status.textContent = `Session ${currentSession}/${sessionNum}`;
+          }
+        }
+        isWork = !isWork;
+        updateTimer();
+      }
+    }
+
+    playAudio(sessionStartSound);
+    updateTimer();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
