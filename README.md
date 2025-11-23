@@ -7,7 +7,11 @@ A transparent overlay timer for OBS streaming with audio notifications.
 - 5-minute short breaks
 - 15-minute long break after 4 sessions
 - Audio notifications for session transitions
+- **Button click sounds** for all interactive controls (20% volume)
 - Transparent background for streaming overlay
+- **Always-visible controls** - Start/Pause, Reset, and Skip buttons on the main timer
+- **Interactive settings** - Click the gear icon for configuration while timer runs
+- Customizable session times and break durations
 
 ## Setup Options
 
@@ -30,15 +34,16 @@ If OBS "Monitor and Output" works for you, use this simple version:
 
 **Result:** Audio plays locally AND goes to stream through OBS!
 
-### Option 2: Dual Audio - Backup Local Playback + OBS Capture
+### Option 2: Interactive Timer with Local Audio
 
-If "Monitor and Output" doesn't work and you need guaranteed local audio:
+For full control with clickable buttons and guaranteed local audio:
 
 1. **Add Browser Source in OBS:**
    - Right-click in Sources → Add → Browser Source
    - Name it "Pomodoro Timer"
    - Check "Local file" and select `pomodoro.html`
    - Set width/height to your desired size (e.g., 800x400)
+   - **Important:** Check "Interact" in the Interaction section (this enables clicking!)
    - Check "Shutdown source when not visible"
    - **Important:** Check "Control audio via OBS" in the Audio section
 
@@ -56,6 +61,7 @@ If "Monitor and Output" doesn't work and you need guaranteed local audio:
    - Name it "Pomodoro Timer"
    - Check "Local file" and select `pomodoro.html`
    - Set width/height to your desired size (e.g., 800x400)
+   - **Optional:** Check "Interact" if you want clickable controls
    - Check "Shutdown source when not visible"
    - **Important:** Check "Control audio via OBS" in the Audio section
 
@@ -83,6 +89,10 @@ If "Monitor and Output" doesn't work and you need guaranteed local audio:
    - Use OBS hotkeys or conditional logic to show/hide media sources when timer events occur
 
 ## Troubleshooting
+
+**Can't click buttons or interact with timer:**
+- **Solution:** In the Browser Source properties, make sure "Interact" is checked in the Interaction section
+- This allows mouse clicks and keyboard input on the browser source
 
 **Audio not working in stream:**
 - For Browser Source: Ensure "Control audio via OBS" is checked

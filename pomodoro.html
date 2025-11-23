@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Pomodoro Timer</title>
+  <link rel="icon" href="timericon.png">
   <style>
     body {
-      background: transparent;
+      background: #000; /* Dark background for browser testing */
       color: white;
       font-family: "Segoe UI", sans-serif;
       font-size: 64px;
@@ -29,16 +30,184 @@
       font-weight: bold;
       letter-spacing: 2px;
     }
+
+    .timer-controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .timer-controls button {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      min-width: 60px;
+    }
+
+    .timer-controls button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .timer-controls button:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    #settingsBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: 1px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background-color 0.2s;
+    }
+
+    #settingsBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Settings panel overlay */
+    #settingsPanel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none; /* Hidden by default */
+      z-index: 999;
+    }
+
+    .settings-content {
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid white;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .settings-content h3 {
+      color: white;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .control-group button {
+      background: #444;
+      color: white;
+      border: 1px solid white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .control-group button:hover {
+      background: #666;
+    }
+
+    .setting-group {
+      margin-bottom: 15px;
+    }
+
+    .setting-group label {
+      display: block;
+      color: white;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .setting-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #666;
+      border-radius: 4px;
+      background: #333;
+      color: white;
+      font-size: 16px;
+    }
+
+    .setting-group input:focus {
+      outline: none;
+      border-color: white;
+    }
+        
+        
   </style>
 </head>
 <body>
   <div id="label">Focus</div>
   <div id="status">Session 1/4</div>
   <div id="timer">25:00</div>
+  <div class="timer-controls">
+    <button id="startBtn">Pause</button>
+    <button id="resetBtn">Reset</button>
+    <button id="skipBtn">Skip</button>
+  </div>
+  <button id="settingsBtn" title="Settings">⚙️</button>
+
+
+  <div id="settingsPanel">
+    <div class="settings-content">
+      <h3>Settings</h3>
+      <div class="setting-group">
+        <label for="workTimeInput">Work Session (minutes): </label>
+        <input type="number" id="workTimeInput" min="1" max="120" value="25">
+      </div>
+      <div class="setting-group">
+        <label for="breakTimeInput"> Short Break (minutes): </label>
+        <input type="number" id="breakTimeInput" min="1" max="30" value="5">
+      </div>
+      <div class="setting-group">
+        <label for="longBreakTimeInput">Long Break (minutes)</label>
+        <input type="number" id="longBreakTimeInput" min="1" max="120" value="30">
+      </div>
+      <div class="setting-group">
+        <label for="sessionCountInput">Sessions before long break:</label>
+        <input type="number" id="sessionCountInput" min="1" max="18" value="4">
+      </div>
+      
+
+      <div class="control-group">
+        <button id="saveSettingsBtn">Save</button>
+        <button id="closeSettingsBtn">Close</button>
+      </div>
+    </div>  
+  </div>
+
 
   <audio id="sessionEndSound" src="sessionend.mp3" preload="auto"></audio>
   <audio id="longBreakSound" src="longbreak.mp3" preload="auto"></audio>
   <audio id="sessionStart" src="sessionstart.mp3" preload="auto"></audio>
+  <audio id="button" src="button.mp3" preload="auto"></audio>
+
 
   <!-- Hidden iframe for OBS audio capture -->
   <iframe id="audioCapture" src="audio-capture.html" style="display: none;"></iframe>
@@ -51,15 +220,129 @@
     let isWork = true;
     let remaining = workTime;
     let isLongBreak = false;
-    let sessionNum = 4;
+    let sessionCount = 4;
     let currentSession = 1;
+    let isRunning = true;
+    let timerInterval;
+    let endTime = 0;
     const label = document.getElementById("label");
     const status = document.getElementById("status");
     const timer = document.getElementById("timer");
     const sessionEndSound = document.getElementById("sessionEndSound");
     const sessionStartSound = document.getElementById("sessionStart");
+    const buttonSound = document.getElementById("button");
     const longBreakSound = document.getElementById("longBreakSound");
     const audioCaptureFrame = document.getElementById("audioCapture");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const workTimeInput = document.getElementById("workTimeInput");
+    const breakTimeInput = document.getElementById("breakTimeInput");
+    const longBreakTimeInput = document.getElementById("longBreakTimeInput");
+    const sessionCountInput = document.getElementById("sessionCountInput");
+    const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    
+    
+
+    function loadSettings() {
+      workTime = (parseInt(localStorage.getItem("workTime")) || 25) * 60;
+      breakTime = (parseInt(localStorage.getItem("breakTime")) || 5) * 60;
+      longBreakTime = (parseInt(localStorage.getItem("longBreakTime")) || 30) *60;
+      sessionCount = parseInt(localStorage.getItem("sessionNum")) || 4;
+      
+
+      workTimeInput.value = Math.floor(workTime / 60);
+      breakTimeInput.value = Math.floor(breakTime / 60);
+      longBreakTimeInput.value = Math.floor(longBreakTime / 60);
+      sessionCountInput.value = sessionCount;
+
+
+      remaining = workTime;
+      if (isRunning) {
+        endTime = Date.now() + remaining * 1000;
+      }
+      updateTimer();
+    }
+
+
+    function saveSettings() {
+      playButtonSound();
+      localStorage.setItem("workTime", workTimeInput.value);
+      localStorage.setItem("breakTime", breakTimeInput.value);
+      localStorage.setItem("longBreakTime", longBreakTimeInput.value);
+      localStorage.setItem("sessionNum", sessionCountInput.value);
+
+      loadSettings();
+
+    }
+
+
+    function startTimer() {
+      playButtonSound();
+      if (!isRunning) {
+        isRunning = true;
+        endTime = Date.now() + remaining * 1000;
+        timerInterval = setInterval(tick, 200);
+        startBtn.textContent = "Pause";
+      } else {
+        isRunning = false;
+        clearInterval(timerInterval);
+        startBtn.textContent = "Start";
+      }
+    }
+
+  
+    function skipSession() {
+      playButtonSound();
+      remaining = 0;
+      if (isRunning) {
+        endTime = Date.now();
+      }
+      tick();
+    }
+
+    function resetSession() {
+      playButtonSound();
+      if (isWork) {
+        remaining = workTime;
+      } else if (isLongBreak) {
+        remaining = longBreakTime;
+      } else {
+        remaining = breakTime;
+      }
+      if (isRunning) {
+        endTime = Date.now() + remaining * 1000;
+      }
+      updateTimer();
+    }
+
+    function playButtonSound() {
+      buttonSound.currentTime = 0;
+      buttonSound.volume = 0.2; // 20% volume
+      buttonSound.play().catch(e => console.log('Button sound failed:', e));
+    }
+
+    function showSettings(){
+      playButtonSound();
+      settingsPanel.style.display = "block";
+    }
+
+    function hideSettings() {
+      playButtonSound();
+      settingsPanel.style.display = "none";
+    }
+
+    settingsBtn.addEventListener("click", showSettings);
+    closeSettingsBtn.addEventListener("click",hideSettings);
+    startBtn.addEventListener("click",startTimer);
+    resetBtn.addEventListener("click",resetSession);
+    skipBtn.addEventListener("click",skipSession);
+    saveSettingsBtn.addEventListener("click", saveSettings);
+
+
     
     function updateTimer() {
       let m = Math.floor(remaining / 60);
@@ -84,14 +367,19 @@
     }
 
     function tick(){
-      if (remaining > 0){
-        remaining--;
+      if (isRunning) {
+        const now = Date.now();
+        const timeLeft = Math.ceil((endTime - now) / 1000);
+        remaining = timeLeft < 0 ? 0 : timeLeft;
+      }
+
+      if (isRunning && remaining > 0){
         updateTimer();
-      } else {
+      } else if (remaining <= 0) {
         if(isWork){
           // Work session just completed
           currentSession++;
-          if(currentSession > sessionNum){
+          if(currentSession > sessionCount){
             // Completed all 4 sessions, take long break
             playAudio(longBreakSound, "longBreakSound");
             label.textContent = "Long Break";
@@ -112,17 +400,21 @@
             playAudio(sessionStartSound, "sessionStart");
             label.textContent = "Focus";
             remaining = workTime;
-            status.textContent = `Session ${currentSession}/${sessionNum}`;
+            status.textContent = `Session ${currentSession}/${sessionCount}`;
             isLongBreak = false;
           } else {
             // Regular break completed, start work session
             playAudio(sessionStartSound, "sessionStart");
             label.textContent = "Focus";
             remaining = workTime;
-            status.textContent = `Session ${currentSession}/${sessionNum}`;
+            status.textContent = `Session ${currentSession}/${sessionCount}`;
           }
         }
         isWork = !isWork;
+        
+        if (isRunning) {
+          endTime = Date.now() + remaining * 1000;
+        }
         updateTimer();
       }
     }
@@ -130,9 +422,11 @@
 
 
 
+    // Initialize
+    loadSettings(); // Load saved settings
+    timerInterval = setInterval(tick, 200); // Start the timer
     playAudio(sessionStartSound, "sessionStart");
-    updateTimer();
-    setInterval(tick, 1000);
+
   </script>
 </body>
 </html>

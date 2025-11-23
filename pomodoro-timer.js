@@ -94,3 +94,5 @@ class PomodoroTimer {
 document.addEventListener('DOMContentLoaded', () => {
     new PomodoroTimer();
 });
+
+
